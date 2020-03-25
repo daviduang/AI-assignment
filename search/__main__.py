@@ -14,20 +14,12 @@ def main():
         black_dict = data_dict(data['black'])
 
         black_list = list(black_dict.keys())
-        white_list = list(white_dict.keys())
+        start_list = list(white_dict.keys())
 
-        print(black_list)
+        # target for testing
+        target_list = [(4, 5)]
 
-        maze = astar.initialize_maze(black_list)
-        start = white_list[0]
-        end = black_list[0]
-
-        print(maze)
-        print(start)
-        print(end)
-
-        path = astar.astar(maze, start, end)
-        print(path)
+        astar.search_path(black_list, start_list, target_list)
 
 
 # A dictionary to store the coordinates contains pieces as keys, corresponding stacks as values

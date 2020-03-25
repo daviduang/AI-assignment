@@ -1,4 +1,6 @@
 """Adopted from: https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2 """
+from typing import List, Tuple
+
 import numpy as np
 
 
@@ -103,26 +105,15 @@ def astar(maze, start, end):
 
 
 def main():
-    maze = [[0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0]]
 
-    start = (0, 0)
-    end = (4, 7)
+    black_list = [(4, 6)]
+    start_list = [(1, 4), (2, 5), (3, 6)]
+    target_list = [(4, 5), (2, 3), (3, 3)]
 
-    path = astar(maze, start, end)
-    print(path)
+    search_path(black_list, start_list, target_list)
 
 
-if __name__ == '__main__':
-    main()
-
-
+# 2-by-2 matrix, '1' stand for the coordinates with a black piece, only black piece can block
 def initialize_maze(black_list):
     maze = [[0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
@@ -137,3 +128,19 @@ def initialize_maze(black_list):
         maze[coordinates[0]][coordinates[1]] = 1
 
     return maze
+
+
+def search_path(black_list, start_list, target_list):
+
+    iter_list = iter(start_list)
+    maze = initialize_maze(black_list)
+    # when the target list is not empty
+    while len(target_list) != 0:
+        start = next(iter_list)
+        target = target_list.pop()
+        path = astar(maze, start, target)
+        print(path)
+
+
+if __name__ == '__main__':
+    main()
