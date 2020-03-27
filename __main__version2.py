@@ -136,75 +136,28 @@ def find_search_point(black_list, num_point, token1, token2):
 
     if num_point == 1:
         # one search point
-        relative_pos = find_relative_pos(point1, point2)
-        search_point = (point1[0] + relative_pos[0], point1[1] + relative_pos[1])
+        search_point = (int((point1[0] + point2[0])/2), int((point1[1] + point2[1])/2))
     else:
         # two search point
         if abs(point1[0] - point2[0]) == 2:
             # horizontal distance is 2
             # move point1 downward for 1 unit,and find one search point
-            point1[1] -= 1
-            relative_pos = find_relative_pos(point1, point2)
-            search_point1 = (point1[0] + relative_pos[0], point1[1] + relative_pos[1])
+            search_point1 = (int((point1[0] + point2[0])/2), int((point1[1]-1 + point2[1])/2))
             search_point.append(search_point1)
-            # move point1 upward for 2 unit
-            # which is 1 unit upward from original position
-            point1[1] += 2
-            relative_pos = find_relative_pos(point1, point2)
-            search_point2 = (point1[0] + relative_pos[0], point1[1] + relative_pos[1])
+            # move point1 upward for 1 unit
+            search_point2 = (int((point1[0] + point2[0])/2), int((point1[1]+1 + point2[1])/2))
             search_point.append(search_point2)
         else:
             # vertical distance is 2
             # move point1 leftward for 1 unit,and find one search point
-            point1[0] -= 1
-            relative_pos = find_relative_pos(point1, point2)
-            search_point1 = (point1[0] + relative_pos[0], point1[1] + relative_pos[1])
+            search_point1 = (int((point1[0]-1 + point2[0])/2), int((point1[1] + point2[1])/2))
             search_point.append(search_point1)
             # move point1 rightward for 2 unit
             # which is 1 unit rightward from original position
-            point1[0] += 2
-            relative_pos = find_relative_pos(point1, point2)
-            search_point2 = (point1[0] + relative_pos[0], point1[1] + relative_pos[1])
+            search_point2 = (int((point1[0]+1 + point2[0])/2), int((point1[1] + point2[1])/2))
             search_point.append(search_point2)
 
     return search_point
-
-
-# return the relative position of point 2 to point 1
-def find_relative_pos(point1, point2):
-    if point1[0] > point2[0]:
-        # left
-        if point1[1] > point2[1]:
-            # down
-            return -1, -1
-        elif point1[1] < point2[1]:
-            # up
-            return -1, 1
-        else:
-            # same vertical position
-            return -1, 0
-    elif point1[0] < point2[0]:
-        # right
-        if point1[1] > point2[1]:
-            # down
-            return 1, -1
-        elif point1[1] < point2[1]:
-            # up
-            return 1, 1
-        else:
-            # same vertical position
-            return 1, 0
-    else:
-        # same horizontal position
-        if point1[1] > point2[1]:
-            # down
-            return 0, -1
-        elif point1[1] < point2[1]:
-            # up
-            return 0, 1
-        else:
-            # same vertical position
-            return 0, 0
 
 
 if __name__ == '__main__':
