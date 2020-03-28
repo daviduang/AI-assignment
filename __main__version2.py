@@ -1,6 +1,7 @@
 import math
 import sys
 import json
+import astar
 
 from util import print_move, print_boom, print_board
 
@@ -10,8 +11,8 @@ def main():
         data = json.load(file)
     # TODO: find and print winning action sequence
 
-    white_list = data['white'][0:len(data['white'])]
-    black_list = data['black'][0:len(data['black'])]
+    white_list = data['white']
+    black_list = data['black']
 
     print(white_list)
     print(black_list)
@@ -22,6 +23,22 @@ def main():
 
     search_list = create_search_list(black_list, distance_list, group_list)
     print(search_list)
+    boom_list = []
+    decide_boom_point(len(white_list), black_list, group_list, search_list, boom_list)
+    print(boom_list)
+
+    block_list = coordinate_only(black_list)
+    start_list = coordinate_only(white_list)
+    astar.search_path(block_list, start_list, boom_list)
+
+
+# remove the number of token in front of the coordinates
+def coordinate_only(old_list):
+    new_list = []
+    for point in old_list:
+        new_list.append((point[1], point[2]))
+
+    return new_list
 
 
 # calculate distance between two tokens
@@ -62,7 +79,7 @@ def make_group(distance_list):
     return group_list
 
 
-# check whether a token is grouped or not
+# check whether a token is in a grouped or not
 def is_grouped(group_list, token):
     for group in group_list:
         if token in group:
@@ -136,28 +153,86 @@ def find_search_point(black_list, num_point, token1, token2):
 
     if num_point == 1:
         # one search point
-        search_point = (int((point1[0] + point2[0])/2), int((point1[1] + point2[1])/2))
+        search_point = (int((point1[0] + point2[0]) / 2), int((point1[1] + point2[1]) / 2))
     else:
         # two search point
         if abs(point1[0] - point2[0]) == 2:
             # horizontal distance is 2
             # move point1 downward for 1 unit,and find one search point
-            search_point1 = (int((point1[0] + point2[0])/2), int((point1[1]-1 + point2[1])/2))
+            search_point1 = (int((point1[0] + point2[0]) / 2), int((point1[1] - 1 + point2[1]) / 2))
             search_point.append(search_point1)
             # move point1 upward for 1 unit
-            search_point2 = (int((point1[0] + point2[0])/2), int((point1[1]+1 + point2[1])/2))
+            search_point2 = (int((point1[0] + point2[0]) / 2), int((point1[1] + 1 + point2[1]) / 2))
             search_point.append(search_point2)
         else:
             # vertical distance is 2
             # move point1 leftward for 1 unit,and find one search point
-            search_point1 = (int((point1[0]-1 + point2[0])/2), int((point1[1] + point2[1])/2))
+            search_point1 = (int((point1[0] - 1 + point2[0]) / 2), int((point1[1] + point2[1]) / 2))
             search_point.append(search_point1)
             # move point1 rightward for 2 unit
             # which is 1 unit rightward from original position
-            search_point2 = (int((point1[0]+1 + point2[0])/2), int((point1[1] + point2[1])/2))
+            search_point2 = (int((point1[0] + 1 + point2[0]) / 2), int((point1[1] + point2[1]) / 2))
             search_point.append(search_point2)
 
     return search_point
+
+
+def decide_boom_point(num_white, black_list, group_list, search_list, boom_list):
+    # no need to search through the search_list any more
+    if num_white >= len(group_list):
+        # found the boom point
+        return True
+
+    current_group_list = group_list.copy()
+    current_black_list = black_list.copy()
+    for boom_point in search_list:
+        # boom this point
+        num_white -= 1
+        # generate the nearby point
+        nearby_point_list = find_nearby_point(boom_point[0])
+        for i in range(0, len(black_list)):
+            # removed black token has -1 as the number of token
+            if black_list[i][0] > 0:
+                # if a black token is inside the nearby region
+                # and its group is still there
+                if [black_list[i][1], black_list[i][2]] in nearby_point_list:
+                    if is_grouped(current_group_list, i):
+                        # update the group list
+                        update_group_list(current_group_list, i)
+
+        update_black_list(current_black_list, current_group_list)
+
+        if decide_boom_point(num_white, current_black_list, current_group_list,
+                             search_list[search_list.index(boom_point) + 1:], boom_list):
+            boom_list.append((boom_point[0][0], boom_point[0][1]))
+            return True
+
+    return False
+
+
+# find the nearby point of a given point
+def find_nearby_point(point):
+    nearby_point_list = [[point[0] - 1, point[1] - 1], [point[0] - 1, point[1]], [point[0] - 1, point[1] + 1],
+                         [point[0], point[1] + 1], [point[0] + 1, point[1] + 1], [point[0] + 1, point[1]],
+                         [point[0] + 1, point[1] - 1], [point[0], point[1] - 1]]
+
+    return nearby_point_list
+
+
+# remove a group in the list which the token is inside it
+def update_group_list(group_list, token):
+    for group in group_list:
+        if token in group:
+            group_list.remove(group)
+            return
+
+
+# update the black list, remove all exploded token
+def update_black_list(black_list, group_list):
+    for point in black_list:
+        if not is_grouped(group_list, black_list.index(point)):
+            # -1 as the number of token in a point means removed
+            point[0] = -1
 
 
 if __name__ == '__main__':
