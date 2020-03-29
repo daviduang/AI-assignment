@@ -1,4 +1,7 @@
 """Adopted from: https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2 """
+from typing import List, Tuple
+
+import numpy as np
 
 
 class Node:
@@ -16,7 +19,7 @@ class Node:
         return self.position == other.position
 
 
-def astar(maze, start, end):
+def astar(maze, start, end, stack_num):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
     # Create start and end node
@@ -32,8 +35,14 @@ def astar(maze, start, end):
     # Add the start node
     open_list.append(start_node)
 
+    threshold = 0
+
     # Loop until you find the end
-    while len(open_list) > 0:
+    while len(open_list) > 0 and threshold < 100:
+
+        threshold += 1
+
+        # print("threshold: ", threshold)
 
         # Get the current node
         current_node = open_list[0]
@@ -58,7 +67,7 @@ def astar(maze, start, end):
 
         # Generate children
         children = []
-        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # Adjacent squares
+        for new_position in adjacent_squares(stack_num):  # Adjacent squares
 
             # Get node position
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
@@ -89,7 +98,7 @@ def astar(maze, start, end):
             # Create the f, g, and h values
             child.g = current_node.g + 1
             child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
-                        (child.position[1] - end_node.position[1]) ** 2)
+                    (child.position[1] - end_node.position[1]) ** 2)
             child.f = child.g + child.h
 
             # Child is already in the open list
@@ -102,20 +111,107 @@ def astar(maze, start, end):
 
 
 def main():
-    maze = [[0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
+    # (0, 1), (1, 1), (2, 0)
+    """
+    black_list = [(0, 1), (1, 1), (2, 0)]
+    white_dict = {(0, 0): 1, (1, 0): 1}
+    """
+
+    black_list = [(0, 1), (1, 1), (2, 0)]
+    white_dict = {(0, 0): 1, (1, 0): 1, (2, 2):1}
+
+    target_list = [(7, 7), (7, 6), (7, 5)]
+
+    # the case that requires stack
+
+    """
+    if search_path(black_list, start_list, target_list) is None:
+        for start in start_list:
+            if start is not in target_list and search_path(black_list, [start], ):
+    """
+
+    search_path(black_list, white_dict, target_list)
+
+
+# 2-by-2 matrix, '1' stand for the coordinates with a black piece, only black piece can block
+def initialize_maze(black_list):
+    maze = [[0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0]]
 
-    start = (0, 0)
-    end = (4, 7)
+    for coordinates in black_list:
+        maze[coordinates[0]][coordinates[1]] = 1
 
-    path = astar(maze, start, end)
-    print(path)
+    return maze
+
+
+def search_path(black_list, start_dict, target_list):
+
+    maze = initialize_maze(black_list)
+
+    output = []
+
+    # when the target list is not empty
+    while len(target_list) != 0:
+
+        print("dict: ", start_dict)
+
+        start_item = start_dict.popitem()
+        stack = start_item[1]
+        start = start_item[0]
+        target = target_list.pop()
+
+        path = astar(maze, start, target, stack)
+
+        if path is not None:
+            output.append(path)
+
+        # if the explored coordinates have a stack of at least 2 pieces
+        if stack >= 2:
+
+            start_dict[target[0], target[1]] = stack
+
+            start_dict[target[0], target[1]] -= 1
+
+            print("dict1: ", start_dict)
+
+
+        # if all paths to a given target have been blocked, move to another white piece to form a stack
+        if path is None:
+
+            target_list.append(target)
+
+            print("1")
+
+            for another_piece in start_dict:
+
+                print(another_piece)
+                print(start)
+
+                if astar(maze, start, another_piece, stack) is not None:
+
+                    output.append(astar(maze, start, another_piece, stack))
+
+                    start_dict[another_piece] += 1
+
+    print(output)
+
+
+# return all the adjacent squares in a list according to the number of stack
+def adjacent_squares(size):
+    adjacent_list = []
+    for x in range(1, size + 1):
+        adjacent_list.append((0, -1 * x))
+        adjacent_list.append((0, x))
+        adjacent_list.append((-1 * x, 0))
+        adjacent_list.append((x, 0))
+
+    return adjacent_list
 
 
 if __name__ == '__main__':
