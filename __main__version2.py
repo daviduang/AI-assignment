@@ -26,10 +26,17 @@ def main():
     boom_list = []
     decide_boom_point(len(white_list), black_list, group_list, search_list, boom_list)
     print(boom_list)
-
+    print(group_list)
     block_list = coordinate_only(black_list)
-    start_list = coordinate_only(white_list)
-    astar.search_path(block_list, start_list, boom_list)
+    start_dict = data_dict(white_list)
+    surrounding_list = create_surrounding_list(block_list, group_list)
+    print(surrounding_list)
+    # no remaining group
+
+
+# if len(group_list) == 0:
+# find path and print.
+#    astar.search_path(block_list, start_dict, boom_list)
 
 
 # remove the number of token in front of the coordinates
@@ -39,6 +46,16 @@ def coordinate_only(old_list):
         new_list.append((point[1], point[2]))
 
     return new_list
+
+
+# A dictionary to store the coordinates contains pieces as keys, corresponding stacks as values
+def data_dict(data_list):
+    coordinates_dict = {}
+
+    for item in data_list:
+        coordinates_dict[item[1], item[2]] = item[0]
+
+    return coordinates_dict
 
 
 # calculate distance between two tokens
@@ -178,11 +195,6 @@ def find_search_point(black_list, num_point, token1, token2):
 
 
 def decide_boom_point(num_white, black_list, group_list, search_list, boom_list):
-    # no need to search through the search_list any more
-    if num_white >= len(group_list):
-        # found the boom point
-        return True
-
     current_group_list = group_list.copy()
     current_black_list = black_list.copy()
     for boom_point in search_list:
@@ -195,16 +207,23 @@ def decide_boom_point(num_white, black_list, group_list, search_list, boom_list)
             if black_list[i][0] > 0:
                 # if a black token is inside the nearby region
                 # and its group is still there
-                if [black_list[i][1], black_list[i][2]] in nearby_point_list:
+                if (black_list[i][1], black_list[i][2]) in nearby_point_list:
                     if is_grouped(current_group_list, i):
                         # update the group list
                         update_group_list(current_group_list, i)
 
         update_black_list(current_black_list, current_group_list)
 
-        if decide_boom_point(num_white, current_black_list, current_group_list,
-                             search_list[search_list.index(boom_point) + 1:], boom_list):
+        # search next search point
+        if num_white >= len(current_group_list) or decide_boom_point(num_white, current_black_list, current_group_list,
+                                                                     search_list[search_list.index(boom_point) + 1:],
+                                                                     boom_list):
             boom_list.append((boom_point[0][0], boom_point[0][1]))
+            # update the group list from previous function, will show the remaining group
+            group_list.clear()
+            for group in current_group_list:
+                group_list.append(group)
+
             return True
 
     return False
@@ -212,10 +231,9 @@ def decide_boom_point(num_white, black_list, group_list, search_list, boom_list)
 
 # find the nearby point of a given point
 def find_nearby_point(point):
-    nearby_point_list = [[point[0] - 1, point[1] - 1], [point[0] - 1, point[1]], [point[0] - 1, point[1] + 1],
-                         [point[0], point[1] + 1], [point[0] + 1, point[1] + 1], [point[0] + 1, point[1]],
-                         [point[0] + 1, point[1] - 1], [point[0], point[1] - 1]]
-
+    nearby_point_list = [(point[0] - 1, point[1] - 1), (point[0] - 1, point[1]), (point[0] - 1, point[1] + 1),
+                         (point[0], point[1] + 1), (point[0] + 1, point[1] + 1), (point[0] + 1, point[1]),
+                         (point[0] + 1, point[1] - 1), (point[0], point[1] - 1)]
     return nearby_point_list
 
 
@@ -233,6 +251,23 @@ def update_black_list(black_list, group_list):
         if not is_grouped(group_list, black_list.index(point)):
             # -1 as the number of token in a point means removed
             point[0] = -1
+
+
+# find all surrounding point for each group of token
+def create_surrounding_list(block_list, group_list):
+    group_surrounding_list = []
+    surrounding_list = []
+    for group in group_list:
+        for token in group:
+            nearby_point = find_nearby_point(block_list[token])
+            for point in nearby_point:
+                if point not in group_surrounding_list \
+                        and point not in block_list:
+                    if point[0] in range(0, 8) and point[1] in range(0, 8):
+                        group_surrounding_list.append(point)
+        surrounding_list.append(group_surrounding_list.copy())
+        group_surrounding_list.clear()
+    return surrounding_list
 
 
 if __name__ == '__main__':
