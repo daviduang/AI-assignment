@@ -1,8 +1,4 @@
 """Adopted from: https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2 """
-from typing import List, Tuple
-
-import numpy as np
-
 
 class Node:
     """A node class for A* Pathfinding"""
@@ -157,6 +153,8 @@ def search_path(black_list, start_dict, target_list):
 
     output = []
 
+    output_dict = {}
+
     # when the target list is not empty
     while len(target_list) != 0:
 
@@ -170,7 +168,7 @@ def search_path(black_list, start_dict, target_list):
         path = astar(maze, start, target, stack)
 
         if path is not None:
-            output.append(path)
+            output_dict[stack] = path
 
         # if the explored coordinates have a stack of at least 2 pieces
         if stack >= 2:
@@ -181,12 +179,10 @@ def search_path(black_list, start_dict, target_list):
 
             print("dict1: ", start_dict)
 
-        # if all paths to a given target have been blocked, move to another white piece to form a stack
+        # if all paths to a given target have been blocked, attempt to move to another white piece to form a stack
         if path is None:
 
             target_list.append(target)
-
-            print("1")
 
             for another_piece in start_dict:
 
@@ -195,11 +191,32 @@ def search_path(black_list, start_dict, target_list):
 
                 if astar(maze, start, another_piece, stack) is not None:
 
-                    output.append(astar(maze, start, another_piece, stack))
+                    output_dict[stack] = astar(maze, start, another_piece, stack)
+                  #  output.append(astar(maze, start, another_piece, stack))
 
                     start_dict[another_piece] += 1
 
-    print(output)
+
+
+    print(output_dict)
+
+
+"""compress Class1 relationship tipping points to a single tipping point per group"""
+def compress_target(black_list, start_dict, total_target_list):
+
+    maze = initialize_maze(black_list)
+    output_target = []
+    while len(total_target_list) != 0:
+
+        start_item = start_dict.popitem()
+        stack = start_item[1]
+        start = start_item[0]
+
+        for target_list in total_target_list:
+            for target in target_list:
+                if astar(maze, start, target, stack) is not None:
+                    output_target.append(target)
+                    total_target_list.remove(target_list)
 
 
 # return all the adjacent squares in a list according to the number of stack
