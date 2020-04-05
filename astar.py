@@ -133,7 +133,7 @@ def main():
     search_path(black_list, white_dict, target_list)
 
 
-# 2-by-2 matrix, '1' stand for the coordinates with a black piece, only black piece can block
+"""2-by-2 matrix, '1' stand for the coordinates with a black piece, only black piece can block"""
 def initialize_maze(black_list):
     maze = [[0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
@@ -150,6 +150,7 @@ def initialize_maze(black_list):
     return maze
 
 
+"""search path in an dictionary of starting points to the targets in a list"""
 def search_path(black_list, start_dict, target_list):
 
     maze = initialize_maze(black_list)
@@ -179,7 +180,6 @@ def search_path(black_list, start_dict, target_list):
             start_dict[target[0], target[1]] -= 1
 
             print("dict1: ", start_dict)
-
 
         # if all paths to a given target have been blocked, move to another white piece to form a stack
         if path is None:
