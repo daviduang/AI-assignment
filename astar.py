@@ -126,11 +126,17 @@ def main():
             if start is not in target_list and search_path(black_list, [start], ):
     """
 
+    print("search path: ", search_path(black_list, white_dict, target_list))
 
-    search_path(black_list, white_dict, target_list)
+    total_target_list = [[(7, 7), (7, 6), (7, 5), (7, 4)], [(6, 7), (6, 6), (6, 5), (6, 4)]]
 
-"""2-by-2 matrix, '1' stand for the coordinates with a black piece, only black piece can block"""
+    white_dict = {(0, 0): 1, (1, 0): 1, (2, 2): 1}
+
+    search_target(black_list, white_dict, total_target_list)
+
+
 def initialize_maze(black_list):
+    """2-by-2 matrix, '1' stand for the coordinates with a black piece, only black piece can block """
     maze = [[0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
@@ -146,16 +152,13 @@ def initialize_maze(black_list):
     return maze
 
 
-"""search path in an dictionary of starting points to the targets in a list"""
 def search_path(black_list, start_dict, target_list):
+    """search path in an dictionary of starting points to the targets in a list,
+    return a list of paths with corresponding stack number (each path contains a list of coordinates) """
 
     maze = initialize_maze(black_list)
-
-    output_dict = {}
-
     output = []
 
-    # when the target list is not empty
     while len(target_list) != 0:
 
         print("dict: ", start_dict)
@@ -168,8 +171,6 @@ def search_path(black_list, start_dict, target_list):
         path = astar(maze, start, target, stack)
 
         if path is not None:
-            #output_dict.update({stack: path})
-
             path_stack = [stack, path]
             output.append(path_stack)
 
@@ -190,48 +191,33 @@ def search_path(black_list, start_dict, target_list):
                 print(start)
 
                 if astar(maze, start, another_piece, stack) is not None:
-                    #output_dict.update({stack: astar(maze, start, another_piece, stack)})
-
                     path_stack = [stack, astar(maze, start, another_piece, stack)]
-
                     output.append(path_stack)
-
                     start_dict[another_piece] += 1
-    print(output)
+    return output
 
 
 """compress Class1 relationship tipping points to a single tipping point per group"""
-def compress_target(black_list, start_dict, total_target_list):
-
+def search_target(black_list, start_dict, total_target_list):
     maze = initialize_maze(black_list)
-    output_target = []
+    output_path = []
+
+    print("dict: ", start_dict)
+
     while len(total_target_list) != 0:
-
-        start_item = start_dict.popitem()
-        stack = start_item[1]
-        start = start_item[0]
-
-        # if the explored coordinates have a stack of at least 2 pieces
-        if stack >= 2:
-
-            start_dict[target[0], target[1]] = stack
-
-            start_dict[target[0], target[1]] -= 1
-
-            print("dict1: ", start_dict)
-
         for target_list in total_target_list:
             for target in target_list:
-                path = astar(maze, start, target, stack)
+                single_target = [target]
+
+                # if there is a path, record the path and discard all other possible targets in the same group
+                path = search_path(maze, start_dict, single_target)
                 if path is not None:
-
-                    print("target: ", target)
-
-                    output_target.append(target)
+                    print("path: ", path)
+                    output_path.append(path)
                     total_target_list.remove(target_list)
                     break
 
-    print("output_target: ", output_target)
+    print("path: ", output_path)
 
 # return all the adjacent squares in a list according to the number of stack
 def adjacent_squares(size):
